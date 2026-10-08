@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<!-- Título que aparece na aba do navegador e no Google -->
+<title>Nutricon — Laboratório de análises de alimentos, água e ambiente | Manaus</title>
+<!-- Descrição que aparece nos resultados de busca do Google -->
+<meta name="description" content="Laboratório em Manaus com mais de 25 anos de experiência em análises físico-químicas e microbiológicas de alimentos e água, e monitoramento ambiental. Atendimento em toda a região Norte.">
+<!-- Faz o site se ajustar corretamente à tela do celular -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Estilo da biblioteca Leaflet (usada no mapa dos locais atendidos) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+
+<style>
+/* ================= VARIÁVEIS GERAIS (cores) ================= */
+:root{
+  --b:#1B3A8C;    /* azul principal */
+  --b2:#13296a;   /* azul escuro (títulos) */
+  --a:#1B3A8C;   /* cor de destaque */
+  --bg:#F6F3EE;   /* cor de fundo do site */
+  --ink:#14181f;  /* cor do texto */
+  --mut:#5b6270;  /* cor de texto secundário (cinza) */
+  box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px) /* respeita a barra inferior do celular */
+}
+
+/* ================= BASE ================= */
+*{box-sizing:border-box;margin:0}                       /* zera margens e padroniza tamanhos */
+html{scroll-behavior:smooth;scroll-padding-top:80px}    /* rolagem suave ao clicar no menu */
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55} /* fonte e cores da página */
+.serif{font-family:Georgia,'Times New Roman',serif}     /* fonte com serifa usada em títulos */
+a{color:inherit}                                        /* links herdam a cor do texto */
+section,header.hero,footer{padding:84px max(24px,6vw)}  /* espaçamento interno de cada bloco */
+.in{max-width:1080px;margin:auto}                       /* centraliza o conteúdo com largura máxima */
+
+/* ================= MENU SUPERIOR ================= */
+nav{position:sticky;top:0;z-index:1000;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:12px max(20px,5vw);padding-top:calc(12px + env(safe-area-inset-top,0px));
+  background:#F6F3EEee;backdrop-filter:blur(8px);border-bottom:1px solid #0001} /* menu fixo no topo com efeito de vidro */
+.logo{display:flex;align-items:center;text-decoration:none;font:italic 700 24px Georgia,serif;color:var(--b)} /* área do logo */
+.logo img{height:56px;width:auto}                       /* tamanho do logo (altere a altura aqui) */
+nav .l{display:flex;gap:22px;font-size:14px;font-weight:500} /* lista de links do menu */
+nav .l a{text-decoration:none;color:var(--mut)}
+nav .l a:hover{color:var(--b)}                          /* link fica azul ao passar o mouse */
+@media(max-width:900px){nav .l{display:none}}           /* esconde os links do menu no celular */
+
+/* ================= BOTÕES ================= */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:99px;font-weight:600;text-decoration:none;font-size:15px;margin:6px 8px 6px 0} /* formato base dos botões */
+nav .btn{margin:0;padding:10px 20px;font-size:14px}     /* botão menor dentro do menu */
+.p{background:var(--b);color:#fff}                      /* botão preenchido azul */
+.s{border:1px solid currentColor}                       /* botão só com borda */
+.ga{background:var(--a);color:#fff}                     /* botão de destaque */
+.ico{width:1.2em;height:1.2em;fill:currentColor;flex:none} /* tamanho e cor dos ícones */
+
+/* ================= TÍTULOS E TEXTOS ================= */
+h1{line-height:1.06;letter-spacing:-.02em;font-weight:400}  /* título principal */
+h2{font-size:clamp(28px,4vw,40px);line-height:1.15;margin-bottom:14px;font-weight:400;color:var(--b2)} /* títulos de seção */
+.eye{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--a);font-weight:700;margin-bottom:16px} /* textinho pequeno acima dos títulos */
+.lead{font-size:18px;color:var(--mut);max-width:620px;margin-bottom:40px} /* parágrafo de apresentação */
+
+/* ================= SEÇÃO PRINCIPAL (HERO) COM FOTO DE FUNDO ================= */
+.hero{position:relative;overflow:hidden;text-align:center;padding-top:130px;padding-bottom:110px;color:#fff;background:var(--b2)} /* fundo azul escuro aparece enquanto o vídeo carrega */
+/* >>> VÍDEO DE FUNDO: o <video class="vbg"> do HTML ocupa toda a seção, sem distorcer (object-fit:cover) <<< */
+.hero .vbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+/* Camada azul escura por cima do vídeo para o texto branco ficar legível (mude .72 e .82 para clarear/escurecer) */
+.hero::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(rgba(10,25,70,.72),rgba(10,25,70,.82))}
+.hero>*:not(.vbg){position:relative;z-index:2}   /* textos e botões ficam acima do vídeo e da camada escura */
+@media(prefers-reduced-motion:reduce){.hero .vbg{display:none}} /* quem desativa animações no aparelho vê só o fundo azul */
+.hero h1{font-size:clamp(40px,6.4vw,76px);max-width:920px;margin:auto}  /* tamanho do título principal */
+.hero .eye{color:#c9d3f0}                               /* cor do texto pequeno sobre a foto */
+.hero .lead{margin:22px auto 30px;color:#e3e9fa}        /* parágrafo centralizado sobre a foto */
+.hero small{display:block;margin-top:18px;color:#c9d3f0;font-size:14px}
+.hero .p{background:#fff;color:var(--b)}                /* botão branco para destacar sobre a foto */
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:40px} /* faixa de selos */
+.chips span{padding:8px 16px;border:1px solid #fff5;border-radius:99px;font-size:13px;color:#fff;background:#ffffff1a}
+
+/* ================= NÚMEROS (faixa azul) ================= */
+.stats{background:var(--b);color:#fff;padding:48px max(24px,6vw)}
+.stats .in{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:28px;text-align:center} /* colunas automáticas */
+.stats b{display:block;font:400 44px Georgia,serif}     /* número grande */
+.stats span{font-size:14px;opacity:.85}                 /* legenda do número */
+
+/* ================= CARTÕES DE SERVIÇOS ================= */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:20px} /* grade de cartões */
+.card{background:#fff;border-radius:20px;padding:30px;border:1px solid #0001;transition:.2s}
+.card:hover{transform:translateY(-3px);box-shadow:0 14px 30px #1b3a8c1a} /* cartão sobe ao passar o mouse */
+.card .n{font:400 32px Georgia,serif;color:var(--a);margin-bottom:6px}
+.card h3{font-size:18px;margin-bottom:8px;color:var(--b2)}
+.card p{color:var(--mut);font-size:15px}
+
+/* ================= PASSOS "COMO SOLICITAR" ================= */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:36px}
+.steps .n{font:400 44px Georgia,serif;color:var(--a)}
+.steps p{color:var(--mut)}
+.alt{background:#fff}                                   /* seções com fundo branco alternado */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start} /* duas colunas */
+@media(max-width:800px){.two{grid-template-columns:1fr}} /* vira uma coluna no celular */
+
+/* ================= LISTA DA INFRAESTRUTURA ================= */
+.ul{list-style:none;padding:0}
+.ul li{padding:16px 0 16px 34px;border-top:1px solid #0002;position:relative}
+.ul li:before{content:"";position:absolute;left:4px;top:25px;width:12px;height:12px;border-radius:50%;background:var(--a)} /* bolinha azul */
+.ul b{display:block;color:var(--b2)}
+.ul span{color:var(--mut);font-size:15px}
+
+/* ================= CARROSSEL DE FOTOS ================= */
+.car{position:relative;margin-top:44px}                 /* caixa que contém o carrossel */
+.track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;gap:16px;scrollbar-width:none;border-radius:20px} /* faixa que desliza na horizontal */
+.track::-webkit-scrollbar{display:none}                 /* esconde a barra de rolagem */
+.slide{flex:0 0 100%;scroll-snap-align:center;position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:linear-gradient(135deg,var(--b),var(--b2))} /* cada foto ocupa 100% da largura, proporção 16:9 */
+.slide img{width:100%;height:100%;object-fit:cover;display:block} /* a foto preenche o quadro sem distorcer */
+.slide figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 24px 18px;color:#fff;font-weight:600;background:linear-gradient(transparent,#000a)} /* legenda sobre a foto */
+.arr{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:#fffe;color:var(--b);cursor:pointer;display:grid;place-items:center;box-shadow:0 6px 16px #0003} /* setas redondas */
+.arr.pv{left:14px}.arr.nx{right:14px}                  /* seta esquerda e direita */
+.arr svg{width:22px;height:22px;fill:currentColor}
+.dots{display:flex;justify-content:center;gap:8px;margin-top:16px} /* bolinhas indicadoras */
+.dots button{width:10px;height:10px;border-radius:50%;border:0;background:#1B3A8C33;cursor:pointer;padding:0}
+.dots button.on{background:var(--b);width:26px;border-radius:99px} /* bolinha da foto atual */
+
+/* ================= MAPAS ================= */
+.map{width:100%;height:420px;border:0;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px #1b3a8c14} /* tamanho dos mapas (altere height) */
+#atend{z-index:0}                                       /* mantém o mapa abaixo do menu */
+.loc{display:grid;grid-template-columns:1fr 1.4fr;gap:40px;align-items:center} /* texto + mapa lado a lado */
+@media(max-width:800px){.loc{grid-template-columns:1fr}}
+
+/* ================= CLIENTES ================= */
+.logos{display:flex;flex-wrap:wrap;gap:12px 14px}
+.logos span{padding:10px 18px;border-radius:12px;background:var(--bg);font-weight:600;font-size:14px;color:var(--b)}
+
+/* ================= PERGUNTAS FREQUENTES ================= */
+details{border-top:1px solid #0002;padding:18px 0}
+details:last-child{border-bottom:1px solid #0002}
+summary{cursor:pointer;font-weight:600;font-size:17px;color:var(--b2)}
+details p{margin-top:10px;color:var(--mut)}
+
+/* ================= CONTATO (fundo azul) ================= */
+.cta{background:var(--b);color:#fff}
+.cta h2{color:#fff}
+.cta .lead{color:#c9d3f0}
+.cta .s{color:#fff}
+.ct{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;margin-top:44px;padding-top:36px;border-top:1px solid #fff3;font-size:15px} /* blocos de contato */
+.ct>div{display:flex;gap:14px;align-items:flex-start}   /* ícone ao lado do texto */
+.ct .ci{width:44px;height:44px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;flex:none} /* círculo do ícone */
+.ct .ci svg{width:22px;height:22px;fill:#fff}
+.ct small{display:block;color:#9fb0e3;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.ct a{text-decoration:none}
+.ct a.mp{display:inline-block;margin-top:4px;color:#c9d3f0;text-decoration:underline}
+
+/* ================= RODAPÉ ================= */
+footer{font-size:13px;color:var(--mut);padding-top:36px;padding-bottom:36px}
+footer .r{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+footer .lk{display:flex;flex-wrap:wrap;gap:8px 20px}    /* links do rodapé com ícones */
+footer a{text-decoration:none;display:inline-flex;align-items:center;gap:7px}
+footer a:hover{color:var(--b)}
+footer .ico{width:16px;height:16px}
+
+/* ================= BOTÃO FLUTUANTE DO WHATSAPP ================= */
+.wa{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:1000;box-shadow:0 10px 24px #0003;margin:0} /* fica fixo no canto da tela */
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  VERSÃO MOBILE — só ajusta tamanhos, espaços e disposição.   ║
+   ║  Cores, fontes, bordas e formatos continuam os mesmos.       ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* Botão do menu (hambúrguer): escondido no computador */
+.mb{display:none}
+body{overflow-x:clip}                                   /* evita rolagem lateral acidental */
+img,iframe,video{max-width:100%}
+
+/* ---------- Tablets e celulares: menu em formato de botão ---------- */
+@media(max-width:900px){
+  nav{flex-wrap:wrap;gap:10px}
+  nav .logo{margin-right:auto}                          /* logo à esquerda, botões à direita */
+  .mb{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;border:1px solid #1B3A8C33;background:#fff;color:var(--b);cursor:pointer;padding:0;flex:none}
+  .mb svg{width:22px;height:22px;fill:currentColor}
+  .mb .x{display:none}
+  nav.open .mb .h{display:none}
+  nav.open .mb .x{display:block}
+  /* lista de links abre como painel logo abaixo do menu */
+  nav.open .l{display:flex;flex-direction:column;gap:0;order:3;flex:0 0 100%;font-size:16px;padding-top:6px;border-top:1px solid #0001}
+  nav.open .l a{padding:14px 4px;border-bottom:1px solid #0001}
+  nav.open .l a:last-child{border-bottom:0}
+}
+
+/* ---------- Celulares ---------- */
+@media(max-width:768px){
+  /* espaçamentos menores entre as seções */
+  section,header.hero,footer{padding:56px max(20px,5vw)}
+  .lead{font-size:16px;margin-bottom:28px}
+  h2{font-size:clamp(26px,7.4vw,34px)}
+  .eye{font-size:11px;letter-spacing:.14em;margin-bottom:12px}
+
+  /* menu superior mais compacto */
+  nav{padding:10px max(16px,4vw);padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  .logo img{height:42px}
+  nav .btn{padding:9px 16px;font-size:13px}
+
+  /* seção principal: botões ocupam a largura toda */
+  .hero{padding-top:64px;padding-bottom:64px}
+  .hero h1{font-size:clamp(32px,9.4vw,46px)}
+  .hero .lead{margin:18px auto 24px}
+  .hero .btn,.cta .btn,#como .btn{display:flex;justify-content:center;width:100%;margin:10px 0 0;text-align:center}
+  .hero small{font-size:13px}
+  .chips{gap:8px;margin-top:28px}
+  .chips span{padding:7px 13px;font-size:12px}
+
+  /* números: 2 colunas */
+  .stats{padding:40px max(20px,5vw)}
+  .stats .in{grid-template-columns:repeat(2,1fr);gap:24px 16px}
+  .stats b{font-size:34px}
+  .stats span{font-size:13px}
+
+  /* cartões e passos em uma coluna */
+  .grid,.steps{grid-template-columns:minmax(0,1fr);gap:16px}
+  .steps{gap:28px}
+  .card{padding:24px;border-radius:18px}
+  .card:hover{transform:none;box-shadow:none}           /* sem efeito de "hover" no toque */
+  .steps .n{font-size:38px}
+
+  /* infraestrutura e localização */
+  .two{gap:28px}
+  .loc{gap:24px}
+  .ul li{padding:14px 0 14px 30px}
+  .ul li:before{top:22px}
+
+  /* carrossel */
+  .car{margin-top:32px}
+  .slide{aspect-ratio:4/3;border-radius:16px}
+  .track{border-radius:16px;gap:12px}
+  .slide figcaption{padding:32px 16px 14px;font-size:14px}
+  .arr{width:38px;height:38px}
+  .arr svg{width:18px;height:18px}
+  .arr.pv{left:8px}.arr.nx{right:8px}
+
+  /* mapas mais baixos */
+  .map{height:320px;border-radius:16px}
+
+  /* clientes */
+  .logos{gap:8px}
+  .logos span{padding:8px 14px;font-size:13px}
+
+  /* perguntas frequentes: área de toque maior */
+  summary{font-size:16px;padding:2px 0}
+  details{padding:16px 0}
+
+  /* contato */
+  .ct{grid-template-columns:minmax(0,1fr);gap:20px;margin-top:32px;padding-top:28px}
+  .ct a{word-break:break-word}
+
+  /* rodapé */
+  footer .r{flex-direction:column;align-items:flex-start}
+  footer .lk{flex-direction:column;gap:12px}
+
+  /* botão flutuante do WhatsApp um pouco menor */
+  .wa{right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));padding:12px 20px;font-size:14px}
+}
+
+/* ---------- Celulares pequenos ---------- */
+@media(max-width:380px){
+  .logo img{height:36px}
+  nav .btn{padding:8px 12px;font-size:12px}
+  .stats b{font-size:30px}
+}
+</style></head><body>
+
+<!-- ============ BIBLIOTECA DE ÍCONES ============
+     Ícones desenhados uma vez aqui e reutilizados no site com <use href="#i-nome"/> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></symbol> <!-- localização -->
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-8.6 15.100L2 22l5-1.300A10 10 0 1 0 12 2zm5.800 14.200c-.2.700-1.400 1.300-1.900 1.400-.5.100-1.100.1-1.800-.1-.4-.1-.9-.3-1.600-.6-2.800-1.200-4.600-4-4.700-4.200-.1-.2-1.100-1.500-1.100-2.800s.7-2 1-2.300c.2-.3.500-.3.700-.3h.5c.2 0 .4 0 .6.5.2.600.8 1.900.8 2 .1.100.1.300 0 .4-.1.200-.1.300-.3.500l-.4.500c-.1.100-.3.300-.1.600.2.300.7 1.200 1.500 1.900 1 .9 1.900 1.200 2.200 1.300.3.100.4.100.6-.1.200-.2.700-.8.900-1.100.2-.3.400-.2.600-.1l1.900.9c.3.100.5.200.5.300.1.200.1.800-.1 1.500z"/></symbol> <!-- whatsapp -->
+  <symbol id="i-mail" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7.200L4.500 7H4v.7l8 5.500 8-5.500V7h-.5L12 12.200z"/></symbol> <!-- e-mail -->
+  <symbol id="i-tel" viewBox="0 0 24 24"><path d="M6.600 10.800a15.100 15.100 0 0 0 6.600 6.600l2.200-2.200a1 1 0 0 1 1-.25c1.100.37 2.300.57 3.600.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.500a1 1 0 0 1 1 1c0 1.300.2 2.500.57 3.600a1 1 0 0 1-.25 1z"/></symbol> <!-- telefone -->
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 5v5.400l4 2.300-.8 1.300-4.700-2.800V7z"/></symbol> <!-- relógio -->
+  <symbol id="i-ig" viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm5 3.500a4.500 4.500 0 1 1 0 9 4.500 4.500 0 0 1 0-9zm0 2a2.500 2.500 0 1 0 0 5 2.500 2.500 0 0 0 0-5zM17.300 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></symbol> <!-- instagram -->
+  <symbol id="i-globe" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.900 9h-3a15 15 0 0 0-1.200-5.100A8 8 0 0 1 18.900 11zM12 4c.8 1 1.700 3 2 7H10c.3-4 1.200-6 2-7zM5.100 13h3a15 15 0 0 0 1.200 5.100A8 8 0 0 1 5.100 13zm3-2h-3a8 8 0 0 1 4.200-5.100A15 15 0 0 0 8.100 11zM12 20c-.8-1-1.700-3-2-7h4c-.3 4-1.200 6-2 7zm2.700-1.900A15 15 0 0 0 15.900 13h3a8 8 0 0 1-4.200 5.100z"/></symbol> <!-- site -->
+</svg>
+
+<!-- ============ MENU SUPERIOR (fixo no topo) ============ -->
+<nav>
+  <!-- Logo: o arquivo logo-removebg-preview.png deve ficar na mesma pasta deste index.html -->
+  <a class="logo" href="#top"><img src="logo-removebg-preview.png" alt="Nutricon"></a>
+  <!-- Links que levam às seções da página (cada href corresponde a um id abaixo) -->
+  <div class="l"><a href="#servicos">Serviços</a><a href="#como">Como solicitar</a><a href="#estrutura">Estrutura</a><a href="#local">Localização</a><a href="#atendimento">Atendimento</a><a href="#clientes">Clientes</a><a href="#faq">Dúvidas</a><a href="#contato">Contato</a></div>
+  <!-- Botão que abre o WhatsApp (wa.me/55 + DDD + número) -->
+  <a class="btn ga" href="https://wa.me/5592994440407">Pedir orçamento</a>
+  <!-- Botão do menu para celular (só aparece em telas pequenas) -->
+  <button class="mb" id="mb" aria-label="Abrir menu" aria-expanded="false"><svg class="h" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg><svg class="x" viewBox="0 0 24 24"><path d="M6.4 5 5 6.400 10.600 12 5 17.600 6.400 19 12 13.400 17.600 19 19 17.600 13.400 12 19 6.400 17.600 5 12 10.600z"/></svg></button>
+</nav>
+
+<!-- ============ SEÇÃO "Resultados confiáveis para alimentos, água e ambiente." ============ -->
+<!-- ╔══════════════════════════════════════════════════════════════════════════╗
+     ║  VÍDEO DE FUNDO: para trocar o vídeo, altere SOMENTE o caminho do src    ║
+     ║  na linha <source src="video/fundo.mp4"> logo abaixo.                    ║
+     ║  O arquivo deve ser .mp4 e ficar na pasta video/, ao lado do index.html. ║
+     ╚══════════════════════════════════════════════════════════════════════════╝ -->
+<header class="hero" id="top">
+  <!-- autoplay = toca sozinho | muted = sem som (obrigatório para tocar automático) | loop = repete sempre
+       playsinline = não abre em tela cheia no iPhone | poster = foto exibida enquanto o vídeo carrega -->
+<video class="vbg" autoplay muted loop playsinline preload="auto" poster="img/fachada.jpg" aria-hidden="true">
+  <source src="video nutricon.mp4" type="video/mp4"> <!-- <<< CAMINHO DO VÍDEO AQUI -->
+</video>
+  <div class="eye">Laboratório em Manaus · Atendimento em toda a região Norte</div> <!-- texto pequeno acima do título -->
+  <h1 class="serif">Resultados confiáveis para alimentos, água e ambiente.</h1>      <!-- título principal -->
+  <p class="lead">Análises físico-químicas e microbiológicas com precisão, rastreabilidade e agilidade, há mais de 25 anos.</p>
+  <!-- Botão principal (WhatsApp) e botão secundário (rola até os serviços) -->
+  <a class="btn p" href="https://wa.me/5592994440407"><svg class="ico"><use href="#i-wa"/></svg>Solicitar orçamento no WhatsApp</a><a class="btn s" href="#servicos">Conhecer os serviços</a>
+  <small>Atendemos indústrias, comércios e órgãos públicos</small>
+  <!-- Selos de valores da empresa -->
+  <div class="chips"><span>Excelência técnica</span><span>Qualidade e confiança</span><span>Resultados com precisão</span><span>Compromisso com você</span></div>
+</header>
+
+<!-- ============ NÚMEROS DA EMPRESA ============ -->
+<div class="stats"><div class="in">
+  <div><b>+25</b><span>anos de experiência</span></div><div><b>697</b><span>clientes atendidos</span></div><div><b>12.098</b><span>análises realizadas</span></div><div><b>+1.000</b><span>tipos de análises</span></div>
+</div></div>
+
+<!-- ============ SERVIÇOS (6 cartões) ============ -->
+<section id="servicos"><div class="in">
+  <div class="eye">O que fazemos</div><h2 class="serif">Serviços laboratoriais completos</h2>
+  <p class="lead">Do ensaio ao treinamento da sua equipe, tudo conforme a legislação vigente e normas técnicas.</p>
+  <div class="grid">
+    <div class="card"><div class="n">01</div><h3>Análises físico-químicas</h3><p>Determinação de parâmetros físico-químicos em alimentos e água.</p></div>
+    <div class="card"><div class="n">02</div><h3>Análises microbiológicas</h3><p>Ensaios para avaliar a qualidade e a segurança de alimentos, água e superfícies.</p></div>
+    <div class="card"><div class="n">03</div><h3>Análises de água</h3><p>Físico-químicas e microbiológicas, para consumo humano, industrial e ambiental.</p></div>
+    <div class="card"><div class="n">04</div><h3>Monitoramento ambiental</h3><p>Monitoramento de ar, superfícies e ambientes para controle de qualidade e conformidade.</p></div>
+    <div class="card"><div class="n">05</div><h3>Swab de superfícies</h3><p>Coleta e análise para verificar contaminação e controlar o risco microbiológico.</p></div>
+    <div class="card"><div class="n">06</div><h3>Consultoria e treinamentos</h3><p>Suporte técnico, orientação e capacitação em boas práticas e gestão da qualidade.</p></div>
+  </div>
+</div></section>
+
+<!-- ============ COMO SOLICITAR (3 passos) ============ -->
+<section id="como" class="alt"><div class="in">
+  <div class="eye">Como solicitar</div><h2 class="serif">Simples, do primeiro contato ao resultado</h2>
+  <p class="lead">Sem burocracia: você conta o que precisa e nossa equipe orienta cada etapa.</p>
+  <div class="steps">
+    <div><div class="n">1</div><h3>Fale conosco</h3><p>Chame no WhatsApp, ligue ou envie um e-mail dizendo quais análises precisa.</p></div>
+    <div><div class="n">2</div><h3>Coleta ou envio da amostra</h3><p>Fazemos coleta externa em qualquer localidade, com segurança e rastreabilidade.</p></div>
+    <div><div class="n">3</div><h3>Receba seus resultados</h3><p>Dados precisos para apoiar decisões seguras e a conformidade legal.</p></div>
+  </div>
+  <div style="margin-top:36px"><a class="btn p" href="https://wa.me/5592994440407"><svg class="ico"><use href="#i-wa"/></svg>Começar pelo WhatsApp</a></div>
+</div></section>
+
+<!-- ============ ESTRUTURA + CARROSSEL DE FOTOS ============ -->
+<section id="estrutura"><div class="in">
+  <div class="two">
+    <!-- Coluna esquerda: título e texto -->
+    <div><div class="eye">Infraestrutura</div><h2 class="serif">Ambientes planejados para resultados confiáveis</h2>
+    <p class="lead" style="margin-bottom:0">Estrutura moderna, equipamentos calibrados e boas práticas laboratoriais em todas as etapas dos ensaios.</p></div>
+    <!-- Coluna direita: lista dos ambientes -->
+    <ul class="ul">
+      <li><b>Laboratório físico-químico</b><span>Equipamentos de alta precisão para ensaios físico-químicos.</span></li>
+      <li><b>Laboratório microbiológico</b><span>Ambiente dedicado, com controle de qualidade e biossegurança.</span></li>
+      <li><b>Sala de microbiologia</b><span>Local reservado para manipulação e preparo de amostras.</span></li>
+      <li><b>Lavagem e descarte seguro</b><span>Higienização de materiais e descarte adequado de resíduos laboratoriais.</span></li>
+    </ul>
+  </div>
+
+  <!-- CARROSSEL: cada <figure class="slide"> é uma foto.
+       Para trocar uma foto, altere o src="img/local-X.jpg". Para adicionar outra, copie uma linha <figure>. -->
+  <div class="car" id="car">
+    <div class="track" id="track">
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/espa%C3%A7o%20nutricon.png?raw=true" alt="Fachada da Nutricon" loading="lazy" onerror="this.remove()"><figcaption>Fachada da Nutricon</figcaption></figure>
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/recep%C3%A7%C3%A3o.png?raw=true" alt="Recepção" loading="lazy" onerror="this.remove()"><figcaption>Recepção</figcaption></figure>
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/lab%20fisico%20quimico.png?raw=true" alt="Laboratório físico-químico" loading="lazy" onerror="this.remove()"><figcaption>Laboratório físico-químico</figcaption></figure>
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/lab%20microbiologia.png?raw=true" alt="Laboratório microbiológico" loading="lazy" onerror="this.remove()"><figcaption>Laboratório microbiológico</figcaption></figure>
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/sala%20de%20microbiologia.png?raw=true" alt="Sala de microbiologia" loading="lazy" onerror="this.remove()"><figcaption>Sala de microbiologia</figcaption></figure>
+      <figure class="slide"><img src="https://github.com/RafaelCruz78/nutriconsite/blob/main/lavagem%20e%20descarte.png?raw=true" alt="Lavagem e descarte seguro" loading="lazy" onerror="this.remove()"><figcaption>Lavagem e descarte seguro</figcaption></figure>
+    </div>
+    <!-- Seta anterior e próxima (controladas pelo JavaScript no final do arquivo) -->
+    <button class="arr pv" id="pv" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4l-8 8 8 8 1.4-1.4L8.8 12z"/></svg></button>
+    <button class="arr nx" id="nx" aria-label="Próxima"><svg viewBox="0 0 24 24"><path d="M8.6 5.4 10 4l8 8-8 8-1.4-1.4L15.2 12z"/></svg></button>
+    <!-- Bolinhas indicadoras (criadas automaticamente pelo JavaScript) -->
+    <div class="dots" id="dots"></div>
+  </div>
+</div></section>
+
+<!-- ============ LOCALIZAÇÃO (Google Maps) ============ -->
+<section id="local" class="alt"><div class="in loc">
+  <div>
+    <div class="eye">Onde estamos</div><h2 class="serif">Venha nos visitar</h2>
+    <p class="lead" style="margin-bottom:20px">Av. Visconde de Porto Alegre, nº 217<br>Centro, Manaus/AM · CEP 69010-125</p>
+    <!-- Botão que abre o endereço no aplicativo/site do Google Maps -->
+    <a class="btn p" href="https://www.google.com/maps/search/?api=1&query=Av.+Visconde+de+Porto+Alegre+217+Manaus" target="_blank" rel="noopener"><svg class="ico"><use href="#i-pin"/></svg>Abrir no Google Maps</a>
+  </div>
+  <!-- Mapa do Google incorporado na página (o endereço está após "q=") -->
+  <iframe class="map" title="Mapa da Nutricon" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Av.+Visconde+de+Porto+Alegre+217+Manaus&output=embed"></iframe>
+</div></section>
+
+<!-- ============ MAPA DOS LOCAIS ATENDIDOS ============ -->
+<section id="atendimento"><div class="in">
+  <div class="eye">Área de atendimento</div><h2 class="serif">Locais atendidos pela Nutricon</h2>
+  <p class="lead">Coleta externa e análises em toda a região Norte. Toque em um ponto para ver a cidade.</p>
+  <!-- Esta caixa vazia é preenchida pelo mapa Leaflet (script no final do arquivo) -->
+  <div class="map" id="atend"></div>
+</div></section>
+
+<!-- ============ CLIENTES ============ -->
+<section id="clientes" class="alt"><div class="in">
+  <div class="eye">Quem confia</div><h2 class="serif">A confiança de quem escolhe qualidade</h2>
+  <p class="lead">Centenas de empresas e instituições em todo o Brasil contam com a Nutricon para garantir segurança, conformidade e qualidade.</p>
+  <div class="logos"><span>Florenzano Nuts</span><span>Toya</span><span>Rio Mar</span><span>Frigopesca</span><span>AmazonMel</span><span>Amazônia Polpas</span><span>Solimões</span><span>Frigorífico Santos</span><span>Granja Nishiki</span><span>LS Alimentos</span><span>MASTERFRIGO</span><span>Norte Boi</span><span>Cassarotti Foods</span><span>DaSelva Foods</span><span>Frigorífico Dona Raimunda</span><span style="background:none">e muitos outros…</span></div>
+</div></section>
+
+<!-- ============ PERGUNTAS FREQUENTES (abrem ao clicar) ============ -->
+<section id="faq"><div class="in" style="max-width:760px">
+  <div class="eye">Dúvidas frequentes</div><h2 class="serif" style="margin-bottom:28px">Perguntas comuns</h2>
+  <details><summary>Quem pode contratar a Nutricon?</summary><p>Indústrias, comércios e órgãos públicos que precisam de análises de alimentos, água ou ambientes.</p></details>
+  <details><summary>Vocês atendem fora de Manaus?</summary><p>Sim. Atendemos toda a região Norte e clientes de todo o Brasil, com coleta externa em qualquer localidade.</p></details>
+  <details><summary>Como peço um orçamento?</summary><p>Pelo WhatsApp (92) 99444-0407, pelo e-mail nutricon@nutricon.com.br ou por telefone, de segunda a sexta, das 07h30 às 17h30.</p></details>
+  <details><summary>Não sei quais análises preciso. E agora?</summary><p>Nossa equipe orienta você. Também oferecemos consultoria e treinamentos em boas práticas e gestão da qualidade.</p></details>
+</div></section>
+
+<!-- ============ CONTATO (com ícones) ============ -->
+<section id="contato" class="cta"><div class="in">
+  <h2 class="serif">Vamos falar sobre a sua análise?</h2>
+  <p class="lead">Conte o que você precisa e receba orientação da nossa equipe técnica.</p>
+  <!-- Botões: abrir WhatsApp e abrir o programa de e-mail (mailto:) -->
+  <a class="btn ga" style="background:#fff;color:var(--b)" href="https://wa.me/5592994440407"><svg class="ico"><use href="#i-wa"/></svg>Chamar no WhatsApp</a><a class="btn s" href="mailto:nutricon@nutricon.com.br"><svg class="ico"><use href="#i-mail"/></svg>Enviar e-mail</a>
+  <div class="ct">
+    <!-- Cada bloco = um círculo com ícone + informação -->
+    <div><span class="ci"><svg><use href="#i-pin"/></svg></span><p><small>Endereço</small>Av. Visconde de Porto Alegre, nº 217<br>Centro, Manaus/AM · CEP 69010-125<br><a class="mp" href="https://www.google.com/maps/search/?api=1&query=Av.+Visconde+de+Porto+Alegre+217+Manaus" target="_blank" rel="noopener">Ver no mapa →</a></p></div>
+    <div><span class="ci"><svg><use href="#i-wa"/></svg></span><p><small>WhatsApp</small><a href="https://wa.me/5592994440407">(92) 99444-0407</a></p></div>
+    <!-- tel: faz o celular abrir a discagem ao tocar -->
+    <div><span class="ci"><svg><use href="#i-tel"/></svg></span><p><small>Telefone</small><a href="tel:+5592994440407">(92) 99444-0407</a></p></div>
+    <div><span class="ci"><svg><use href="#i-mail"/></svg></span><p><small>E-mail</small><a href="mailto:nutricon@nutricon.com.br">nutricon@nutricon.com.br</a></p></div>
+    <div><span class="ci"><svg><use href="#i-clock"/></svg></span><p><small>Horário</small>Segunda a sexta<br>07h30 às 17h30</p></div>
+  </div>
+</div></section>
+
+<!-- ============ RODAPÉ (links com ícones) ============ -->
+<footer><div class="in">
+  <div class="r"><span>© 2026 Nutricon · Consultoria e Análise de Alimentos</span>
+  <span class="lk">
+    <a href="https://www.google.com/maps/search/?api=1&query=Av.+Visconde+de+Porto+Alegre+217+Manaus" target="_blank" rel="noopener"><svg class="ico"><use href="#i-pin"/></svg>Localização</a>
+    <a href="https://wa.me/5592994440407"><svg class="ico"><use href="#i-wa"/></svg>WhatsApp</a>
+    <a href="mailto:nutricon@nutricon.com.br"><svg class="ico"><use href="#i-mail"/></svg>E-mail</a>
+    <a href="tel:+5592994440407"><svg class="ico"><use href="#i-tel"/></svg>(92) 99444-0407</a>
+    <a href="https://instagram.com/nutriconlab"><svg class="ico"><use href="#i-ig"/></svg>@nutriconlab</a>
+    <a href="https://www.nutricon.com.br"><svg class="ico"><use href="#i-globe"/></svg>nutricon.com.br</a>
+  </span></div>
+</div></footer>
+
+<!-- Botão flutuante do WhatsApp (sempre visível no canto da tela) -->
+<a class="btn ga wa" href="https://wa.me/5592994440407"><svg class="ico"><use href="#i-wa"/></svg>WhatsApp</a>
+
+<!-- Biblioteca Leaflet: gera o mapa interativo dos locais atendidos -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ===== CARROSSEL: controla setas, bolinhas e troca automática ===== */
+(function(){
+  var t=document.getElementById('track'),   // faixa com as fotos
+      s=t.children,                         // lista de fotos
+      d=document.getElementById('dots'),    // caixa das bolinhas
+      i=0,                                  // número da foto atual
+      timer;                                // temporizador da troca automática
+  // Cria uma bolinha para cada foto; clicar nela vai até a foto
+  for(var k=0;k<s.length;k++){(function(k){var b=document.createElement('button');b.setAttribute('aria-label','Foto '+(k+1));b.onclick=function(){go(k)};d.appendChild(b)})(k)}
+  // Vai para a foto n (volta ao início quando chega no fim)
+  function go(n){i=(n+s.length)%s.length;t.scrollTo({left:s[i].offsetLeft-t.offsetLeft,behavior:'smooth'});mark()}
+  // Destaca a bolinha da foto atual
+  function mark(){[].forEach.call(d.children,function(b,k){b.className=k===i?'on':''})}
+  // Atualiza a bolinha quando o usuário desliza com o dedo/mouse
+  t.addEventListener('scroll',function(){var n=Math.round(t.scrollLeft/(s[0].offsetWidth+16));if(n!==i&&n>=0&&n<s.length){i=n;mark()}});
+  // Botões de seta
+  document.getElementById('pv').onclick=function(){go(i-1);reset()};
+  document.getElementById('nx').onclick=function(){go(i+1);reset()};
+  // Troca automática a cada 5000 ms (5 segundos) — altere o número para mudar a velocidade
+  function reset(){clearInterval(timer);timer=setInterval(function(){go(i+1)},5000)}
+  mark();reset();
+})();
+
+/* ===== MAPA DOS LOCAIS ATENDIDOS ===== */
+(function(){
+  // Cria o mapa dentro da caixa #atend, sem zoom pela rolagem do mouse (evita travar a rolagem da página)
+  var m=L.map('atend',{scrollWheelZoom:false}).setView([-4.5,-58],5);
+  // Camada com o desenho do mapa (OpenStreetMap)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(m);
+  // LISTA DE LOCAIS ATENDIDOS — formato: ['Nome', latitude, longitude]
+  // Para adicionar um local, copie uma linha e troque o nome e as coordenadas
+  var pts=[['Manaus (sede)',-3.119,-60.022],['Parintins',-2.628,-56.736],['Itacoatiara',-3.143,-58.444],['Tefé',-3.354,-64.711],['Santarém',-2.443,-54.708],['Belém',-1.456,-48.502],['Macapá',0.035,-51.07],['Boa Vista',2.820,-60.673],['Porto Velho',-8.761,-63.900],['Rio Branco',-9.975,-67.824],['Palmas',-10.184,-48.333]];
+  var g=[]; // guarda as posições para enquadrar o mapa
+  pts.forEach(function(p,k){
+    // Desenha um ponto azul em cada local (a sede, k===0, é maior) com balão ao clicar
+    var c=L.circleMarker([p[1],p[2]],{radius:k===0?11:8,color:'#fff',weight:2,fillColor:'#1B3A8C',fillOpacity:1}).addTo(m).bindPopup('<b>'+p[0]+'</b>');
+    g.push(c.getLatLng());
+  });
+  // Ajusta o zoom para mostrar todos os pontos de uma vez
+  m.fitBounds(L.latLngBounds(g).pad(.15));
+})();
+</script>
+<script>
+/* ===== MENU MOBILE: abre/fecha a lista de links e fecha ao tocar em um link ===== */
+(function(){
+  var n=document.querySelector('nav'),b=document.getElementById('mb');
+  function set(o){n.classList.toggle('open',o);b.setAttribute('aria-expanded',o);b.setAttribute('aria-label',o?'Fechar menu':'Abrir menu')}
+  b.onclick=function(){set(!n.classList.contains('open'))};
+  [].forEach.call(n.querySelectorAll('.l a'),function(a){a.addEventListener('click',function(){set(false)})});
+})();
+</script>
+</body></html>
